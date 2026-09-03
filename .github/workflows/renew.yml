@@ -1,9 +1,9 @@
-name: Auto Renew HidenCloud 
+name: Auto Renew HidenCloud TG WeChat
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: '30 05 * * 0' # 根据到期时间在星期几 提前一天,比如星期三到期，cron写星期二即可
+    - cron: '30 0 * * 0' # 对应 UTC 周日 00:30（北京时间周日 08:30 运行）
 
 permissions:
   actions: write
@@ -43,6 +43,7 @@ jobs:
           COOKIE_VALUE: ${{ secrets.COOKIE_VALUE }}
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+          WX_PUSH_TOKEN: ${{ secrets.WX_PUSH_TOKEN }} # 注入微信 Token
           IS_PROXY: ${{ env.IS_PROXY }}
           PROXY_SERVER: ${{ env.PROXY_SERVER }}
         run: xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" python3 app.py
