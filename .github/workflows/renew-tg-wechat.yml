@@ -1,7 +1,7 @@
 name: Auto Renew HidenCloud TG WeChat
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: # 开启 Actions 面板的手动触发运行按钮
   schedule:
     - cron: '30 0 * * 0' # 对应 UTC 周日 00:30（北京时间周日 08:30 运行）
 
@@ -43,7 +43,10 @@ jobs:
           COOKIE_VALUE: ${{ secrets.COOKIE_VALUE }}
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
-          WX_PUSH_TOKEN: ${{ secrets.WX_PUSH_TOKEN }} # 注入微信 Token
+          WECHAT_APPID: ${{ secrets.WECHAT_APPID }}             # 微信测试号 AppID
+          WECHAT_APPSECRET: ${{ secrets.WECHAT_APPSECRET }}     # 微信测试号 AppSecret
+          WECHAT_OPENID: ${{ secrets.WECHAT_OPENID }}           # 个人微信号 OpenID
+          WECHAT_TEMPLATE_ID: ${{ secrets.WECHAT_TEMPLATE_ID }} # 微信模板 ID
           IS_PROXY: ${{ env.IS_PROXY }}
           PROXY_SERVER: ${{ env.PROXY_SERVER }}
         run: xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" python3 app.py
