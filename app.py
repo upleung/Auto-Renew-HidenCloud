@@ -9,7 +9,10 @@ EMAIL         = os.environ.get('EMAIL') or ""
 PASSWORD      = os.environ.get('PASSWORD') or ""
 TG_BOT_TOKEN  = os.environ.get('TG_BOT_TOKEN') or ""
 TG_CHAT_ID    = os.environ.get('TG_CHAT_ID') or ""
-WX_PUSH_TOKEN = os.environ.get('WX_PUSH_TOKEN') or "" # 新增微信推送 Token
+WECHAT_APPID       = os.environ.get('WECHAT_APPID') or ""
+WECHAT_APPSECRET   = os.environ.get('WECHAT_APPSECRET') or ""
+WECHAT_OPENID      = os.environ.get('WECHAT_OPENID') or ""
+WECHAT_TEMPLATE_ID = os.environ.get('WECHAT_TEMPLATE_ID') or ""
 
 BASE_URL = "https://dash.hidencloud.com"
 LOGIN_URL = f"{BASE_URL}/auth/login"
@@ -71,28 +74,47 @@ def send_telegram_notification(status, old_due, new_due):
         log(f"❌ Telegram 通知异常: {e}")
     return False
 
+# --- 替换原来的 send_wechat_notification 函数 ---
 def send_wechat_notification(status, old_due, new_due):
-    if not WX_PUSH_TOKEN:
-        log("⚠️ 微信 Token 未配置，跳过推送")
+    """使用微信官方测试号直连推送，彻底告别第三方数据泄露"""
+    if not all([WECHAT_APPID, WECHAT_APPSECRET, WECHAT_OPENID, WECHAT_TEMPLATE_ID]):
+        log("⚠️ 微信直连推送参数未配置齐全，跳过推送")
         return False
+        
     title, content = format_push_content(status, old_due, new_due)
-    url = "http://www.pushplus.plus/send"
-    payload = {
-        "token": WX_PUSH_TOKEN,
-        "title": title,
-        "content": content.replace('\n', '<br>'),
-        "template": "html"
-    }
+    
     try:
-        # 微信推送走国内直连更稳定，不经过代理
-        resp = requests.post(url, json=payload, timeout=10)
-        if resp.status_code == 200 and resp.json().get('code') == 200:
-            log("✅ 微信 PushPlus 通知发送成功")
+        # 1. 获取微信官方接口调用凭据 (Access Token)
+        token_url = f"https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid={WECHAT_APPID}&secret={WECHAT_APPSECRET}"
+        token_resp = requests.get(token_url, timeout=10).json()
+        access_token = token_resp.get("access_token")
+        
+        if not access_token:
+            log(f"❌ 获取微信 Access Token 失败: {token_resp}")
+            return False
+
+        # 2. 组装模板消息载荷并推送到你的微信
+        push_url = f"https://api.weixin.qq.com/cgi-bin/message/template/send?access_token={access_token}"
+        payload = {
+            "touser": WECHAT_OPENID,
+            "template_id": WECHAT_TEMPLATE_ID,
+            "data": {
+                "title": {"value": title, "color": "#173177"},
+                "content": {"value": content, "color": "#333333"}
+            }
+        }
+        
+        push_resp = requests.post(push_url, json=payload, timeout=10).json()
+        if push_resp.get("errcode") == 0:
+            log("✅ 微信官方直连推送成功！")
             return True
-        log(f"❌ 微信通知失败: {resp.text}")
+        else:
+            log(f"❌ 微信直连推送失败: {push_resp}")
+            return False
+            
     except Exception as e:
-        log(f"❌ 微信通知异常: {e}")
-    return False
+        log(f"❌ 微信直连推送请求异常: {e}")
+        return False
 
 def handle_cloudflare(page):
     iframe_selector = 'iframe[src*="challenges.cloudflare.com"]'
