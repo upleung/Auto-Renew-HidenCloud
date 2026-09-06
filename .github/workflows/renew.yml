@@ -1,9 +1,14 @@
 name: Auto Renew HidenCloud TG WeChat
 
+# UTC 周六20:46 - 周日20:46 ↔️ 北京时间 周日04:46 - 周一04:46
+# UTC 周六20:50 - 周日20:30 ↔️ 北京时间 周日04:50 - 周一04:30(时间范围)
+# UTC 周六22:35 - 周日15:18 ↔️ 北京时间 周日06:35 - 周日23:18(策略调整)
 on:
   workflow_dispatch: # 开启 Actions 面板的手动触发运行按钮
   schedule:
-    - cron: '30 0 * * 0' # 对应 UTC 周日 00:30（北京时间周日 08:30 运行）
+    - cron: '35 22 * * 5' 
+    - cron: '18 15 * * 0'
+    - cron: '28 2 * * 0'
 
 permissions:
   actions: write
