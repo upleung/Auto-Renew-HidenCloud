@@ -1,4 +1,4 @@
-name: Auto Renew HidenCloud TG WeChat V3
+name: Auto Renew HidenCloud Pro
 
 on:
   workflow_dispatch: 
@@ -28,8 +28,8 @@ jobs:
         with:
           python-version: '3.11'
 
-      # 关键修正：从 playwright 变更为反盾内核 patchright
-      - name: 🛠️ 安装系统依赖和 Python 依赖
+      # 关键修正：必须使用 patchright 才能实施底层鼠标轨迹模拟
+      - name: 🛠️️ 安装系统依赖和 Python 依赖
         run: |
           sudo apt-get update
           sudo apt-get install -y xvfb
@@ -66,7 +66,7 @@ jobs:
             echo "::add-mask::$EXPORT_IP"
           fi
           
-          # 使用虚拟屏幕启动 Python 脚本
+          # 启动虚拟屏幕运行 Python 任务
           xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" python3 -u app.py
 
       # 原作者防 GitHub Actions 长时间未提交自动禁用的机制
@@ -79,7 +79,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "No need to commit"
           else
-            git commit -m "⏱️ Auto Update by Github Actions $(TZ=Asia/Shanghai date +'%Y-%m-%d %H:%M:%S')"
+            git commit -m "⏱️️ Auto Update by Github Actions $(TZ=Asia/Shanghai date +'%Y-%m-%d %H:%M:%S')"
             git push origin main
           fi
 
