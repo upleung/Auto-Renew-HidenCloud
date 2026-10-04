@@ -99,11 +99,11 @@ def send_telegram_notification(status, old_due, new_due):
     return False
 
 def send_wechat_notification(status, old_due, new_due):
-    if not all([WECHAT_APPID, WECHAT_APPSECRET, WECHAT_OPENID, WECHAT_TEMPLATE_ID]):
+    # 只要 APPID, SECRET, TEMPLATE 齐全，且至少有一个 OPENID 即可运行
+    if not all([WECHAT_APPID, WECHAT_APPSECRET, WECHAT_TEMPLATE_ID]) or not (WECHAT_OPENID or WECHAT_OPENID2):
         log("⚠️️ 微信直连推送参数未配置齐全，跳过推送")
         return False
         
-    # --- 微信专属排版定制 ---
     now = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(time.time() + 8 * 3600))
     if '@' in EMAIL:
         name, domain = EMAIL.split('@', 1)
@@ -111,11 +111,9 @@ def send_wechat_notification(status, old_due, new_due):
     else:
         masked_email = EMAIL[:2] + '****' if EMAIL else "未配置"
 
-    # 1. 定制微信标题，显示 Hiden🌥，并去除原生状态里的多余前缀符号
     clean_status = status.replace("✅ ", "").replace("❌ ", "").replace("⏳ ", "")
     wechat_title = f"Hiden🌥 {clean_status}"
 
-    # 2. 定制微信详细内容，去除复杂 emoji 以防止微信模板渲染截断导致内容空白
     wechat_content = (
         f"账号: {masked_email}\n"
         f"续期前: {old_due}\n"
@@ -131,22 +129,29 @@ def send_wechat_notification(status, old_due, new_due):
             log(f"❌ 获取微信 Access Token 失败")
             return False
 
-        push_url = f"https://api.weixin.qq.com/cgi-bin/message/template/send?access_token={access_token}"
-        payload = {
-            "touser": WECHAT_OPENID,
-            "template_id": WECHAT_TEMPLATE_ID,
-            "data": {
-                "title": {"value": wechat_title, "color": "#173177"},
-                "content": {"value": wechat_content, "color": "#333333"}
+        # 将配置了的 OpenID 放入列表进行循环推送
+        openids = [oid for oid in [WECHAT_OPENID, WECHAT_OPENID2] if oid]
+        success_count = 0
+        
+        for openid in openids:
+            push_url = f"https://api.weixin.qq.com/cgi-bin/message/template/send?access_token={access_token}"
+            payload = {
+                "touser": openid,
+                "template_id": WECHAT_TEMPLATE_ID,
+                "data": {
+                    "title": {"value": wechat_title, "color": "#173177"},
+                    "content": {"value": wechat_content, "color": "#333333"}
+                }
             }
-        }
-        push_resp = requests.post(push_url, json=payload, timeout=10).json()
-        if push_resp.get("errcode") == 0:
-            log("✅ 微信官方直连推送成功！")
-            return True
-        else:
-            log(f"❌ 微信直连推送失败: {push_resp}")
-            return False
+            push_resp = requests.post(push_url, json=payload, timeout=10).json()
+            if push_resp.get("errcode") == 0:
+                # 打印 OpenID 后4位以便于区分是谁收到了
+                log(f"✅ 微信官方直连推送成功 (尾号 {openid[-4:]})")
+                success_count += 1
+            else:
+                log(f"❌ 微信直连推送失败 (尾号 {openid[-4:]}): {push_resp}")
+                
+        return success_count > 0
     except Exception as e:
         log(f"❌ 微信直连推送请求异常: {e}")
         return False
