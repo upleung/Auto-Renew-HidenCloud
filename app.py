@@ -18,6 +18,7 @@ TG_BOT_TOKEN = os.environ.get('TG_BOT_TOKEN') or ""
 WECHAT_APPID       = os.environ.get('WECHAT_APPID') or ""
 WECHAT_APPSECRET   = os.environ.get('WECHAT_APPSECRET') or ""
 WECHAT_OPENID      = os.environ.get('WECHAT_OPENID') or ""
+WECHAT_OPENID2     = os.environ.get('WECHAT_OPENID2') or ""
 WECHAT_TEMPLATE_ID = os.environ.get('WECHAT_TEMPLATE_ID') or ""
 
 BASE_URL = "https://dash.hidencloud.com"
