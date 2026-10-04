@@ -1,6 +1,6 @@
 # 🚀 Auto-Renew-HidenCloud Pro
 
-本项目基于 [eooce](https://github.com/eooce/Auto-Renew-HidenCloud) 的优秀开源代码进行深度重构与二次开发。同步升级更新 HidenCloud Renew 保活续期与推送通知功能，支持 Telegram 和 Wechat 续期实况通知推送，并对 Actions 日志 IP 进行了防泄漏保护。
+本项目基于 [eooce](https://github.com/eooce/Auto-Renew-HidenCloud) 的优秀开源代码进行深度重构与二次开发。同步升级更新 HidenCloud Renew 保活续期与推送通知功能，支持 Telegram 和 Wechat 续期实况通知推送，并对 Actions 日志 IP 进行了隐藏保护。
 
 ---
 
