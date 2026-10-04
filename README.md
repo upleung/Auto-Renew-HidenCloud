@@ -52,6 +52,8 @@
 
 保存后会生成一个**模板ID**，将其填入 `WECHAT_TEMPLATE_ID` 即可。
 
+</details>
+
 ---
 
 ## 🚀 使用指南 (Usage)
