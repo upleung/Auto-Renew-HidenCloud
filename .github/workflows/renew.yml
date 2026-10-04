@@ -53,6 +53,7 @@ jobs:
           WECHAT_APPID: ${{ secrets.WECHAT_APPID }}
           WECHAT_APPSECRET: ${{ secrets.WECHAT_APPSECRET }}
           WECHAT_OPENID: ${{ secrets.WECHAT_OPENID }}
+          WECHAT_OPENID2: ${{ secrets.WECHAT_OPENID2 }}
           WECHAT_TEMPLATE_ID: ${{ secrets.WECHAT_TEMPLATE_ID }}
           IS_PROXY: ${{ env.IS_PROXY }}
           PROXY_SERVER: ${{ env.PROXY_SERVER }}
