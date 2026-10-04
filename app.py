@@ -99,10 +99,29 @@ def send_telegram_notification(status, old_due, new_due):
 
 def send_wechat_notification(status, old_due, new_due):
     if not all([WECHAT_APPID, WECHAT_APPSECRET, WECHAT_OPENID, WECHAT_TEMPLATE_ID]):
-        log("⚠️ 微信直连推送参数未配置齐全，跳过推送")
+        log("⚠️️ 微信直连推送参数未配置齐全，跳过推送")
         return False
         
-    title, content = format_push_content(status, old_due, new_due)
+    # --- 微信专属排版定制 ---
+    now = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(time.time() + 8 * 3600))
+    if '@' in EMAIL:
+        name, domain = EMAIL.split('@', 1)
+        masked_email = f"{name[:2]}****{name[-2:]}@{domain}" if len(name) > 4 else f"{name}@{domain}"
+    else:
+        masked_email = EMAIL[:2] + '****' if EMAIL else "未配置"
+
+    # 1. 定制微信标题，显示 Hiden🌥，并去除原生状态里的多余前缀符号
+    clean_status = status.replace("✅ ", "").replace("❌ ", "").replace("⏳ ", "")
+    wechat_title = f"Hiden🌥 {clean_status}"
+
+    # 2. 定制微信详细内容，去除复杂 emoji 以防止微信模板渲染截断导致内容空白
+    wechat_content = (
+        f"账号: {masked_email}\n"
+        f"续期前: {old_due}\n"
+        f"续期后: {new_due}\n"
+        f"时间: {now}"
+    )
+    
     try:
         token_url = f"https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid={WECHAT_APPID}&secret={WECHAT_APPSECRET}"
         token_resp = requests.get(token_url, timeout=10).json()
@@ -116,8 +135,8 @@ def send_wechat_notification(status, old_due, new_due):
             "touser": WECHAT_OPENID,
             "template_id": WECHAT_TEMPLATE_ID,
             "data": {
-                "title": {"value": title, "color": "#173177"},
-                "content": {"value": content, "color": "#333333"}
+                "title": {"value": wechat_title, "color": "#173177"},
+                "content": {"value": wechat_content, "color": "#333333"}
             }
         }
         push_resp = requests.post(push_url, json=payload, timeout=10).json()
