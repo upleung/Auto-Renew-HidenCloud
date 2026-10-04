@@ -1,40 +1,43 @@
 name: Auto Renew HidenCloud TG WeChat
 
-# UTC 周六20:46 - 周日20:46 ↔️ 北京时间 周日04:46 - 周一04:46
-# UTC 周六20:50 - 周日20:30 ↔️ 北京时间 周日04:50 - 周一04:30(时间范围)
-# UTC 周六22:35 - 周日15:28 ↔️ 北京时间 周日06:35 - 周日23:28(策略调整)（主用🐧-备用🌥️）
 on:
-  workflow_dispatch: # 开启 Actions 面板的手动触发运行按钮
+  workflow_dispatch: 
   schedule:
-    - cron: '35 22 * * 6' 
-  # - cron: '28 15 * * 0'
+    # 结合你的续期窗口，建议定在 UTC 周六 22:35 和周日 15:36
+    - cron: '35 22 * * 6'
+  # - cron: '36 15 * * 0'
 
 permissions:
   actions: write
-  contents: read
+  contents: write
 
 jobs:
   Renew-HidenCloud:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: true
 
       - name: ⚙ 设置 Python
         uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
+      # 关键修正：从 playwright 变更为反盾内核 patchright
       - name: 🛠️ 安装系统依赖和 Python 依赖
         run: |
           sudo apt-get update
           sudo apt-get install -y xvfb
-          pip install playwright requests 'requests[socks]'
-          python -m playwright install --with-deps chrome
+          pip install patchright requests 'requests[socks]'
+          python -m patchright install --with-deps chrome
           
       - name: ⚙ 设置代理 (sing-box)
+        continue-on-error: true
         env:
           NODE_LINK: ${{ secrets.NODE_LINK }}
         run: |
@@ -47,24 +50,38 @@ jobs:
           COOKIE_VALUE: ${{ secrets.COOKIE_VALUE }}
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
-          WECHAT_APPID: ${{ secrets.WECHAT_APPID }}             # 微信测试号 AppID
-          WECHAT_APPSECRET: ${{ secrets.WECHAT_APPSECRET }}     # 微信测试号 AppSecret
-          WECHAT_OPENID: ${{ secrets.WECHAT_OPENID }}           # 个人微信号 OpenID
-          WECHAT_TEMPLATE_ID: ${{ secrets.WECHAT_TEMPLATE_ID }} # 微信模板 ID
+          WECHAT_APPID: ${{ secrets.WECHAT_APPID }}
+          WECHAT_APPSECRET: ${{ secrets.WECHAT_APPSECRET }}
+          WECHAT_OPENID: ${{ secrets.WECHAT_OPENID }}
+          WECHAT_TEMPLATE_ID: ${{ secrets.WECHAT_TEMPLATE_ID }}
           IS_PROXY: ${{ env.IS_PROXY }}
           PROXY_SERVER: ${{ env.PROXY_SERVER }}
         run: |
           # 提前获取出口 IP 并通知 GitHub Actions 进行日志脱敏 (将 IP 隐藏为 ***)
           # 优先尝试通过 sing-box 常用的本地代理端口获取，如果全失败则获取直连 IP
-          EXPORT_IP=$(curl -s --socks5-hostname 127.0.0.1:2080 https://api.ipify.org || curl -s --socks5-hostname 127.0.0.1:1080 https://api.ipify.org || curl -s https://api.ipify.org)        
+          EXPORT_IP=$(curl -s --socks5-hostname 127.0.0.1:2080 https://api.ipify.org || curl -s --socks5-hostname 127.0.0.1:1080 https://api.ipify.org || curl -s https://api.ipify.org)         
           
           # 验证获取到的内容是否为合法的 IPV4 格式，防止获取失败导致将空字符串或错误提示作为掩码
           if [[ $EXPORT_IP =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "::add-mask::$EXPORT_IP"
           fi
           
-          # 运行主程序 (原有代码保持不变)
-          xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" python3 app.py
+          # 使用虚拟屏幕启动 Python 脚本
+          xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" python3 -u app.py
+
+      # 原作者防 GitHub Actions 长时间未提交自动禁用的机制
+      - name: 🕒 更新保活时间
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          echo "$(TZ=Asia/Shanghai date +'%Y-%m-%d %H:%M:%S')" > time.txt
+          git add time.txt
+          if git diff --cached --quiet; then
+            echo "No need to commit"
+          else
+            git commit -m "⏱️ Auto Update by Github Actions $(TZ=Asia/Shanghai date +'%Y-%m-%d %H:%M:%S')"
+            git push origin main
+          fi
 
       - name: 🧽 清理进程和临时文件
         if: always()
