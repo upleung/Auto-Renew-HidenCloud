@@ -1,18 +1,7 @@
 # 🚀 Auto-Renew-HidenCloud Pro
 
-本项目基于 [eooce](https://github.com/eooce/Auto-Renew-HidenCloud) 的优秀开源代码进行深度重构与二次开发。专为应对 HidenCloud 日益严苛的 Cloudflare Turnstile (5秒盾) 验证与多账号风控而设计。
+本项目基于 [eooce](https://github.com/eooce/Auto-Renew-HidenCloud) 的优秀开源代码进行深度重构与二次开发。同步升级更新 HidenCloud Renew 保活续期与推送通知功能，支持 Telegram 和 Wechat 续期实况通知推送。
 
-核心理念：**“算网分离”** —— 利用 GitHub Actions 的免费强大算力进行高负载的浏览器自动化破盾，同时通过独享代理节点将网络请求完美伪装为您自己的原生 IP。
-
-## ✨ 进阶版核心特性 (Pro Features)
-
-- **🛡️ 极致破盾内核**：全面弃用原生 Playwright，升级至专为反指纹检测打造的 `Patchright` 内核，配合 CDP 底层真实鼠标轨迹模拟，无感绕过最新版 CF 验证盾。
-- **🌐 原生 IP 伪装 (算网分离)**：内置 `sing-box` 代理引擎。允许 GitHub 服务器通过您的个人独享节点（如 GCP、Oracle）发起请求，完美规避 GitHub 官方机房 IP 被 HidenCloud 批量拉黑的风险。
-- **🔒 日志 IP 安全脱敏**：脚本运行初期自动嗅探出口 IP，并对 GitHub Actions 运行日志中的节点 IP 进行 `***` 脱敏掩码处理，彻底杜绝节点泄露。
-- **📱 微信/TG 双通道推送**：除了 Telegram，国内用户现可配置**微信官方测试号**直连推送，告别 Server酱 等第三方平台的数据中转泄露隐患。
-- **⏱️ Actions 智能防休眠**：每次运行自动向仓库提交 `time.txt` 时间戳，彻底解决 GitHub Actions 超过 60 天无活动被官方强制挂起的问题。
-
----
 
 ## 🛠️ 环境变量配置 (Secrets)
 
